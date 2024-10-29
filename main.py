@@ -18,15 +18,22 @@ with open('settings.json', 'r', encoding='utf-8') as file:
 
 num_simulations = config["num_simulations"]
 max_time = config["max_time"]
+count_per_iter = config["count_per_iter"]
+space_len_min = config["space_len_min"]
+
+TABLE_PLAYER = 4
+MAX_STD_SCORE = 1000000
+MIN_STD_SCORE = 0
+PERCENT = 100
 
 
 def simulate_match(players_list, specified_participants=None):
     if specified_participants:
         participants = [player for player in players_list if player['name'] in specified_participants]
-        if len(participants) != 4:
+        if len(participants) != TABLE_PLAYER:
             raise ValueError("必须指定恰好四名选手")
     else:
-        participants = random.sample(players_list, 4)
+        participants = random.sample(players_list, TABLE_PLAYER)
 
     # 随机分配名次
     random.shuffle(participants)
@@ -45,8 +52,8 @@ start_time = time.time()
 result_counts = defaultdict(int)
 top_four_counts = Counter()
 rank_counts = defaultdict(lambda: defaultdict(int))
-min_std_score = num_simulations * num_simulations
-must_std_score = 0
+min_std_score = MAX_STD_SCORE
+must_std_score = MIN_STD_SCORE
 
 for _ in range(num_simulations):
     # 模拟前重置分数
@@ -68,6 +75,7 @@ for _ in range(num_simulations):
         top_four_counts[player['name']] += 1
         min_std_score = min(min_std_score, player['标准分'])
 
+    # noinspection PyTypeChecker
     must_std_score = max(top_four[top_k - 1]['标准分'], must_std_score)
     # 统计选手的所有排名
     ranks = sorted(result, key=lambda x: (x['标准分'], x['比赛分']), reverse=True)
@@ -77,8 +85,8 @@ for _ in range(num_simulations):
         rank_counts[player['name']][rank_count] += 1
         rank_counts[player['name']]['total_score'] += rank_count
 
-    # 每 100000 统计时间，超过 max_time 进行截断
-    if (_ + 1) % 100000 == 0:
+    # 每 count_per_iter 统计时间，超过 max_time 进行截断
+    if (_ + 1) % count_per_iter == 0:
         elapsed_time = time.time() - start_time
         if elapsed_time > max_time:
             print(f"超过截止时间 {max_time} 秒，进行夹断（已进行 {_ + 1} 次模拟）。")
@@ -115,7 +123,7 @@ print("\n=====================")
 sorted_top_four = sorted(top_four_counts.items(), key=lambda x: x[1], reverse=True)
 print(f"每个玩家进入前{top_k}名的概率：")
 for name, count in sorted_top_four:
-    probability = count / num_simulations * 100
+    probability = count / num_simulations * PERCENT
     print(f"{name}: {probability: .2f}%")
 
 print("\n=====================")
@@ -128,7 +136,7 @@ for details in rank_counts.values():
 # 将所有排名排序
 all_ranks = sorted(all_ranks)
 
-max_len = 5
+max_len = space_len_min
 for player in initial_scores:
     max_len = max(max_len, len(player['name']))
 
@@ -136,9 +144,9 @@ for player in initial_scores:
 for player, details in rank_counts.items():
     average_rank = details['total_score'] / num_simulations
     current_width = sum(wcwidth.wcswidth(c) for c in player)
-    row = [f"{player + ' ' * (max_len + 3 - current_width)}: {average_rank: .2f}", ' ( ']
+    row = [f"{player + ' ' * (max_len + space_len_min - current_width)}: {average_rank: .2f}", ' ( ']
     for rank in all_ranks:
-        row.append(f" {(details[rank] / num_simulations * 100): .2f}% ")
+        row.append(f" {(details[rank] / num_simulations * PERCENT): .2f}% ")
     row.append(' )')
     output_matrix.append(row)
 

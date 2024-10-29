@@ -1,4 +1,6 @@
 {
     "num_simulations": 100000,
-    "max_time": 60
+    "max_time": 60,
+    "count_per_iter": 100000,
+    "space_len_min": 3
 }
