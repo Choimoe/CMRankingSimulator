@@ -104,29 +104,34 @@ sorted_items = sorted(items, key=sort_key)
 
 sorted_result = [(tuple(key), value) for key, value in sorted_items]
 
-print(f"模拟次数：{num_simulations}")
+result = []
 
-print("\n=====================")
-print(f"必定晋级的最低标准分：{must_std_score}")
-print(f"能够晋级的最低标准分：{min_std_score}")
+result.append(f"模拟次数：{num_simulations}")
+
+result.append("\n=====================")
+result.append(f"必定晋级的最低标准分：{must_std_score}")
+result.append(f"能够晋级的最低标准分：{min_std_score}")
 
 # # 打印最终结果
-# print("\n=====================")
-# print("模拟结果：")
+# result.append("\n=====================")
+# result.append("模拟结果：")
 # for result, count in sorted_result:
 #     res = sorted(result, key=lambda x: (x[1]), reverse=True)
-#     print(f"Result: {res} - Count: {count}")
+#     result.append(f"Result: {res} - Count: {count}")
 
 # 计算并打印每个玩家进入前四名的概率
 
-print("\n=====================")
+result.append("\n=====================")
 sorted_top_four = sorted(top_four_counts.items(), key=lambda x: x[1], reverse=True)
-print(f"每个玩家进入前{top_k}名的概率：")
+result.append(f"每个玩家进入前{top_k}名的概率：")
 for name, count in sorted_top_four:
     probability = count / num_simulations * PERCENT
-    print(f"{name}: {probability: .2f}%")
+    result.append(f"{name}: {probability: .3f}%")
 
-print("\n=====================")
+result.append("\n=====================")
+
+print(" ".join(result))
+
 output_matrix = []
 all_ranks = set()
 # 收集所有出现过的排名
@@ -155,3 +160,9 @@ print(" ".join(header))
 
 for row in output_matrix:
     print(" ".join(row))
+
+with open('result.txt', 'w', encoding='utf-8') as f:
+    f.write("\n".join(result) + "\n")
+    f.write(" ".join(header) + "\n")
+    for row in output_matrix:
+        f.write(" ".join(row) + "\n")
